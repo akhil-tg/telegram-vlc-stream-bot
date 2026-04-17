@@ -6,14 +6,21 @@ This bot allows streaming of large media files from Telegram directly to VLC
 or any media player without requiring a full download.
 """
 
+import os
+import sys
+
+# Ensure the working directory and sys.path are set to the script's directory
+current_dir = os.path.dirname(os.path.abspath(__file__))
+os.chdir(current_dir)
+if current_dir not in sys.path:
+    sys.path.insert(0, current_dir)
+
 import logging
 import uvicorn
 from fastapi import FastAPI
 from bot_client import bot
 from server.routes_improved import router
 from config import Config
-import os
-
 # Delete old session files on startup
 session_file = "TelegramStreamBot.session"
 if os.path.exists(session_file):

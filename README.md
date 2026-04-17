@@ -92,7 +92,7 @@ graph LR
 ### 🚀 One-Click Deploy (Koyeb)
 
 <div align="center">
-  <a href="https://app.koyeb.com/deploy?type=git&repository=github.com/ytcreatorstudio2001/telegram-vlc-stream-bot&branch=main&name=telegram-vlc-bot">
+  <a href="https://app.koyeb.com/deploy?type=git&repository=github.com/akhil-tg/telegram-vlc-stream-bot&branch=master&name=telegram-vlc-bot">
     <img src="https://www.koyeb.com/static/images/deploy/button.svg" alt="Deploy to Koyeb" width="200"/>
   </a>
 </div>
