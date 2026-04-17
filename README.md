@@ -97,6 +97,8 @@ graph LR
   </a>
 </div>
 
+> 💡 **Deploy Note:** When Koyeb asks you to choose a Builder, select **Dockerfile** (not Buildpacks). You must also fill in the required **Environment Variables** below in the Koyeb dashboard for the bot to come online!
+
 <br>
 
 ### 🔑 Environment Variables
