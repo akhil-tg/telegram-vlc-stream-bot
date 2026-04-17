@@ -4,18 +4,20 @@ Copyright (c) 2025 Akhil TG. All Rights Reserved.
 """
 
 from pyrogram import Client
-from pyrogram.storage import MemoryStorage
 from config import Config
 import os
+import time
+import random
 
-# Use persistent directory for sessions (survives deployments)
 SESSION_DIR = os.getenv("SESSION_DIR", "/app/sessions" if os.path.exists("/app/sessions") else ".")
 os.makedirs(SESSION_DIR, exist_ok=True)
+
+session_name = f"StreamBot_{int(time.time())}_{random.randint(1000,9999)}"
 
 class Bot(Client):
     def __init__(self):
         super().__init__(
-            "TelegramStreamBot",
+            session_name,
             api_id=Config.API_ID,
             api_hash=Config.API_HASH,
             bot_token=Config.BOT_TOKEN,
@@ -33,7 +35,6 @@ class Bot(Client):
             await super().stop()
             print("Bot Stopped!")
         except RuntimeError as e:
-            # Suppress the "attached to a different loop" error
             if "attached to a different loop" not in str(e):
                 raise
 
