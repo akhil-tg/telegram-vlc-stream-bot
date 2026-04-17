@@ -64,8 +64,8 @@ async def lifespan(app: FastAPI):
                         print("Max retries reached. Bot will not start.")
                         break
 
-        # Start bot in background so Uvicorn can start immediately
-        asyncio.create_task(start_bot_background())
+        # Start bot and wait for it to fully start before continuing
+        await start_bot_background()
     
     yield
     
