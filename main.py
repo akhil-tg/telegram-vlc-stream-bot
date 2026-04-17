@@ -12,6 +12,13 @@ from fastapi import FastAPI
 from bot_client import bot
 from server.routes_improved import router
 from config import Config
+import os
+
+# Delete old session files on startup
+session_file = "TelegramStreamBot.session"
+if os.path.exists(session_file):
+    os.remove(session_file)
+    print(f"Removed old session: {session_file}")
 
 # Configure logging
 logging.basicConfig(
@@ -33,54 +40,42 @@ async def lifespan(app: FastAPI):
         print("Please fill in your Telegram API details in the .env file.")
     else:
         import asyncio
-        
-        async def start_bot_background():
-            from pyrogram.errors import FloodWait
-            max_retries = 3
-            for attempt in range(max_retries):
-                try:
-                    logger.info(f"Attempting to start bot (Attempt {attempt + 1}/{max_retries})...")
-                    bot.boot_status = f"Connecting... (Attempt {attempt + 1})"
-                    await bot.start()
-                    bot.boot_status = "Online"
-                    logger.info("Bot Started in Background Loop")
-                    print("Bot Started in Background Loop")
+        from pyrogram.errors import FloodWait
+        max_retries = 3
+        for attempt in range(max_retries):
+            try:
+                logger.info(f"Attempting to start bot (Attempt {attempt + 1}/{max_retries})...")
+                bot.boot_status = f"Connecting... (Attempt {attempt + 1})"
+                await bot.start()
+                bot.boot_status = "Online"
+                logger.info("Bot Started!")
+                print("Bot Started!")
+                break
+            except FloodWait as e:
+                wait_time = e.value
+                bot.boot_status = f"FloodWait: Waiting {wait_time}s"
+                logger.warning(f"FloodWait: Telegram requires a wait of {wait_time} seconds.")
+                print(f"Waiting {wait_time} seconds before retry...")
+                await asyncio.sleep(wait_time)
+            except Exception as e:
+                bot.boot_status = f"Error: {e}"
+                logger.error(f"Failed to start bot: {e}")
+                print(f"Failed to start bot: {e}")
+                if attempt < max_retries - 1:
+                    print(f"Retrying in 5 seconds...")
+                    await asyncio.sleep(5)
+                else:
+                    bot.boot_status = "Failed to start (Max retries)"
+                    print("Max retries reached. Bot will not start.")
                     break
-                except FloodWait as e:
-                    wait_time = e.value
-                    bot.boot_status = f"⚠️ FloodWait: Waiting {wait_time}s"
-                    logger.warning(f"⚠️ FloodWait: Telegram requires a wait of {wait_time} seconds.")
-                    print(f"Waiting {wait_time} seconds before retry...")
-                    await asyncio.sleep(wait_time)
-                except Exception as e:
-                    bot.boot_status = f"❌ Error: {e}"
-                    logger.error(f"❌ Failed to start bot: {e}")
-                    print(f"❌ Failed to start bot: {e}")
-                    if attempt < max_retries - 1:
-                        print(f"Retrying in 5 seconds...")
-                        await asyncio.sleep(5)
-                    else:
-                        bot.boot_status = "❌ Failed to start (Max retries)"
-                        print("Max retries reached. Bot will not start.")
-                        break
-
-        # Start bot and wait for it to fully start before continuing
-        await start_bot_background()
     
     yield
     
     try:
         await bot.stop()
         print("Bot Stopped")
-    except RuntimeError as e:
-        # Ignore the "attached to a different loop" error during shutdown
-        # This is a known issue with Pyrogram + FastAPI lifespan
-        if "attached to a different loop" in str(e):
-            print("Bot stopped (ignoring asyncio loop cleanup warning)")
-        else:
-            print(f"Bot shutdown error: {e}")
     except Exception as e:
-        print(f"Bot shutdown error (can be ignored): {e}")
+        print(f"Bot shutdown error: {e}")
 
 app = FastAPI(lifespan=lifespan)
 
